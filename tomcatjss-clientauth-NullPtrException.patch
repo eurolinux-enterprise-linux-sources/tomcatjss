@@ -1,0 +1,14 @@
+diff -rupN tomcatjss-2.1.0.orig/src/org/apache/tomcat/util/net/jss/JSSSocketFactory.java tomcatjss-2.1.0/src/org/apache/tomcat/util/net/jss/JSSSocketFactory.java
+--- tomcatjss-2.1.0.orig/src/org/apache/tomcat/util/net/jss/JSSSocketFactory.java	2015-02-09 13:32:18.000000000 -0800
++++ tomcatjss-2.1.0/src/org/apache/tomcat/util/net/jss/JSSSocketFactory.java	2015-02-09 14:39:06.000000000 -0800
+@@ -394,6 +394,10 @@ public class JSSSocketFactory
+             } //mPasswordStore not null
+ 
+             String clientAuthStr = (String)attributes.get("clientauth");
++            if (clientAuthStr == null) {
++                debugWrite("JSSSocketFactory init - \"clientauth\" not found, default to want.");
++                clientAuthStr = "want";
++            }
+             File file = null;
+             try {
+                 mServerCertNickPath = (String)attributes.get("serverCertNickFile");

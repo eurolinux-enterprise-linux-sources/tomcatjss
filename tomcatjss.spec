@@ -1,6 +1,6 @@
 Name:     tomcatjss
 Version:  2.1.0
-Release:  3%{?dist}
+Release:  4%{?dist}
 Summary:  JSSE implementation using JSS for Tomcat
 URL:      http://pki.fedoraproject.org/
 License:  LGPLv2+
@@ -15,15 +15,17 @@ BuildRequires:    ant
 BuildRequires:    java-devel >= 1:1.6.0
 BuildRequires:    jpackage-utils
 BuildRequires:    tomcat6
-BuildRequires:    jss >= 4.2.6
+BuildRequires:    jss >= 4.2.6-35
 
 Requires:         java >= 1:1.6.0
 Requires:         jpackage-utils
 Requires:         tomcat6
-Requires:         jss >= 4.2.6
+Requires:         jss >= 4.2.6-35
 
 Patch1:           tomcatjss-client-auth.patch 
 Patch2:           tomcatjss-strict-ciphers.patch
+Patch3:           tomcatjss-clientauth-NullPtrException.patch
+Patch4:           tomcatjss-TLSv1.1-1.2-support.patch
 
 # The 'tomcatjss' package conflicts with the 'tomcat-native' package
 # because it uses an underlying NSS security model rather than the
@@ -49,6 +51,8 @@ NOTE:  The 'tomcatjss' package conflicts with the 'tomcat-native' package
 %setup -q
 %patch1 -p1
 %patch2 -p1
+%patch3 -p1
+%patch4 -p1
 
 %build
 
@@ -73,11 +77,17 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root)
-%doc %attr(644,root,root) README LICENSE
 %attr(00755,root,root) %{_datadir}/doc/%{name}-%{version}
+%doc %attr(644,root,root) README LICENSE
 %{_javadir}/*
 
 %changelog
+* Mon Sep 29 2014 Christina Fu <cfu@redhat.com> - 2.1.0-4
+- Bugzilla Bug #1190911 NullPointerException in tomcatjss searching
+  for attribute "clientauth" (cfu)
+- Bugzilla Bug #1167471 - [RFE] Provide Tomcat support for TLS v1.1 and
+  TLS v1.2 (Tomcatjss) (cfu)
+
 * Mon Jun 16 2014 Christina Fu <cfu@redhat.com> - 2.1.0-3
 - Resolves: Buzilla Bug #1084224 - Tomcatjss missing strictCiphers implementation
 
