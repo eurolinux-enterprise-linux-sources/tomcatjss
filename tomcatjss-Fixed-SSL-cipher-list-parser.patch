@@ -1,0 +1,94 @@
+From c14c8ec6b077721eddeddb125b9a4b0141e5e4aa Mon Sep 17 00:00:00 2001
+From: "Endi S. Dewata" <edewata@redhat.com>
+Date: Thu, 1 Jun 2017 00:29:37 +0200
+Subject: [PATCH] Fixed SSL cipher list parser.
+
+The SSL cipher list parsers have been modified to ignore spaces
+to allow more user-friendly formatting.
+
+https://pagure.io/tomcatjss/issue/9
+
+Change-Id: Ic21f0347e06e20f64ef37de95f9d1f1ac3d1f0d2
+---
+ .../apache/tomcat/util/net/jss/JSSImplementation.java    |  5 +++--
+ src/org/apache/tomcat/util/net/jss/JSSSocketFactory.java | 16 ++++++++++++++--
+ 2 files changed, 17 insertions(+), 4 deletions(-)
+
+diff --git a/src/org/apache/tomcat/util/net/jss/JSSImplementation.java b/src/org/apache/tomcat/util/net/jss/JSSImplementation.java
+index 42dc8d2..8721844 100644
+--- a/src/org/apache/tomcat/util/net/jss/JSSImplementation.java
++++ b/src/org/apache/tomcat/util/net/jss/JSSImplementation.java
+@@ -25,6 +25,8 @@ import java.io.IOException;
+ import java.net.Socket;
+ import java.util.Properties;
+ 
++import org.apache.commons.logging.Log;
++import org.apache.commons.logging.LogFactory;
+ import org.apache.tomcat.util.net.AbstractEndpoint;
+ import org.apache.tomcat.util.net.SSLImplementation;
+ import org.apache.tomcat.util.net.SSLSupport;
+@@ -35,8 +37,7 @@ public class JSSImplementation extends SSLImplementation {
+     static final String JSSFactory = "org.apache.tomcat.util.net.jss.JSSFactory";
+     static final String SSLSocketClass = "org.mozilla.jss.ssl.SSLSocket";
+ 
+-    static org.apache.commons.logging.Log logger = org.apache.commons.logging.LogFactory
+-            .getLog(JSSImplementation.class);
++    static Log logger = LogFactory.getLog(JSSImplementation.class);
+ 
+     private JSSFactory factory = null;
+ 
+diff --git a/src/org/apache/tomcat/util/net/jss/JSSSocketFactory.java b/src/org/apache/tomcat/util/net/jss/JSSSocketFactory.java
+index 4992600..f974a89 100644
+--- a/src/org/apache/tomcat/util/net/jss/JSSSocketFactory.java
++++ b/src/org/apache/tomcat/util/net/jss/JSSSocketFactory.java
+@@ -42,6 +42,8 @@ import javax.net.ssl.SSLContext;
+ import javax.net.ssl.TrustManager;
+ 
+ import org.apache.commons.lang.StringUtils;
++import org.apache.commons.logging.Log;
++import org.apache.commons.logging.LogFactory;
+ // Imports required to "implement" Tomcat 7 Interface
+ import org.apache.tomcat.util.net.AbstractEndpoint;
+ import org.mozilla.jss.CertDatabaseException;
+@@ -61,6 +63,8 @@ public class JSSSocketFactory implements
+         org.apache.tomcat.util.net.ServerSocketFactory,
+         org.apache.tomcat.util.net.SSLUtil {
+ 
++    static Log logger = LogFactory.getLog(JSSSocketFactory.class);
++
+     private static HashMap<String, Integer> cipherMap = new HashMap<String, Integer>();
+     static {
+         // SSLv2
+@@ -382,9 +386,13 @@ public class JSSSocketFactory implements
+             debugWrite("JSSSocketFactory setSSLCiphers: " + attr + " not found");
+             return;
+         }
+-        StringTokenizer st = new StringTokenizer(ciphers, ",");
++
++        logger.debug("Processing " + attr + ":");
++        StringTokenizer st = new StringTokenizer(ciphers, ", ");
+         while (st.hasMoreTokens()) {
+             String cipherstr = st.nextToken();
++            logger.debug(" - " + cipherstr);
++
+             int cipherid = 0;
+             String text;
+             boolean state;
+@@ -456,9 +464,13 @@ public class JSSSocketFactory implements
+             debugWrite("no sslOptions specified");
+             return;
+         }
+-        StringTokenizer st = new StringTokenizer(options, ",");
++
++        logger.debug("Processing sslOptions:");
++        StringTokenizer st = new StringTokenizer(options, ", ");
+         while (st.hasMoreTokens()) {
+             String option = st.nextToken();
++            logger.debug(" - " + option);
++
+             StringTokenizer st1 = new StringTokenizer(option, "=");
+             String name = st1.nextToken();
+             String value = st1.nextToken();
+-- 
+1.8.3.1
+

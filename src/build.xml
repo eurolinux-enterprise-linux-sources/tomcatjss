@@ -37,8 +37,8 @@
 
   <property name="Name" value="Tomcat JSS"/>
   <property name="name" value="tomcatjss"/>
-  <property name="version" value="7.1.2"/>
-  <property name="manifest-version" value="7.1.2"/>
+  <property name="version" value="7.2.1"/>
+  <property name="manifest-version" value="7.2.1"/>
 
   <!--
     Set the properties that control various build options
@@ -48,7 +48,10 @@
   <property name="chmod.maxparallel" value="250"/>
   <property name="deprecation" value="false"/>
   <property name="optimize" value="true"/>
-  <property name="specfile" value="tomcatjss.el5.spec"/>
+  <property name="specfile" value="tomcatjss.spec"/>
+  <property name="rhel" value="0"/>
+  <property name="jnidir" value="/usr/lib/java" />
+  <property name="installdir" value="/usr/share/java" />
 
   <!--
     Set the properties related to the source tree
@@ -161,7 +164,6 @@
      <zipfileset dir="." filemode="755" prefix="${src.dist.name}">
         <include name="README"/>
         <include name="LICENSE"/>
-        <include name="${specfile}"/>
         <include name="build.xml"/>
         <include name="src/**"/>
       </zipfileset>
@@ -170,7 +172,6 @@
       <tarfileset dir="." mode="755" prefix="${src.dist.name}">
         <include name="README"/>
         <include name="LICENSE"/>
-        <include name="${specfile}"/>
         <include name="build.xml"/>
         <include name="src/**"/>
       </tarfileset>
@@ -223,6 +224,13 @@
   <target name="dist" depends="compile,package,main_distribution" description="--> creates the full Apache Ant distribution">
   </target>
 
+  <target name="install" depends="compile,package">
+    <delete file="${installdir}/tomcatjss-${version}.jar"/>
+    <delete file="${installdir}/tomcatjss.jar"/>
+    <copy file="${build.jars}/tomcatjss.jar" tofile="${installdir}/tomcatjss-${version}.jar"/>
+    <symlink link="${installdir}/tomcatjss.jar" resource="tomcatjss-${version}.jar"/>
+  </target>
+
   <target name="main" depends="compile,package">
   </target>
 
@@ -234,9 +242,11 @@
   <target name="rpms" depends="dist">
     <mkdir dir="${rpm.dist.dir}"/>
     <mkdir dir="${rpm.dist.dir}/SOURCES"/>
+    <copy file="${dist.base.source}/${src.dist.name}.tar.gz" tofile="${rpm.dist.dir}/SOURCES/${src.dist.name}.tar.gz"/>
     <mkdir dir="${rpm.dist.dir}/RPMS"/>
     <mkdir dir="${rpm.dist.dir}/SRPMS"/>
     <mkdir dir="${rpm.dist.dir}/SPECS"/>
+    <copy file="${specfile}" tofile="${rpm.dist.dir}/SPECS/${specfile}"/>
     <mkdir dir="${rpm.dist.dir}/BUILD"/>
 
 
@@ -245,8 +255,8 @@
       <arg value="_topdir ${rpm.dist.dir}"/>
       <arg value="--define"/>
       <arg value="rhel ${rhel}"/>
-      <arg value="-ta"/>
-      <arg value="${dist.base.source}/${src.dist.name}.tar.gz"/>
+      <arg value="-ba"/>
+      <arg value="${rpm.dist.dir}/SPECS/${specfile}"/>
     </exec>
   </target>
 
