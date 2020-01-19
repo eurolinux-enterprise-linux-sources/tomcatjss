@@ -34,6 +34,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Properties;
 import java.util.StringTokenizer;
 
 import javax.net.ssl.KeyManager;
@@ -96,7 +97,11 @@ public class JSSSocketFactory implements
                 SSLSocket.SSL3_RSA_EXPORT_WITH_DES40_CBC_SHA);
         cipherMap.put("SSL3_RSA_WITH_DES_CBC_SHA",
                 SSLSocket.SSL3_RSA_WITH_DES_CBC_SHA);
+
         cipherMap.put("SSL3_RSA_WITH_3DES_EDE_CBC_SHA",
+                SSLSocket.SSL3_RSA_WITH_3DES_EDE_CBC_SHA);
+        // deprecated SSL3.0 names replaced by IANA-registered TLS names
+        cipherMap.put("TLS_RSA_WITH_3DES_EDE_CBC_SHA",
                 SSLSocket.SSL3_RSA_WITH_3DES_EDE_CBC_SHA);
 
         cipherMap.put("SSL3_DH_DSS_EXPORT_WITH_DES40_CBC_SHA",
@@ -116,13 +121,22 @@ public class JSSSocketFactory implements
                 SSLSocket.SSL3_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA);
         cipherMap.put("SSL3_DHE_DSS_WITH_DES_CBC_SHA",
                 SSLSocket.SSL3_DHE_DSS_WITH_DES_CBC_SHA);
+
         cipherMap.put("SSL3_DHE_DSS_WITH_3DES_EDE_CBC_SHA",
                 SSLSocket.SSL3_DHE_DSS_WITH_3DES_EDE_CBC_SHA);
+        // deprecated SSL3.0 names replaced by IANA-registered TLS names
+        cipherMap.put("TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA",
+                SSLSocket.SSL3_DHE_DSS_WITH_3DES_EDE_CBC_SHA);
+
         cipherMap.put("SSL3_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA",
                 SSLSocket.SSL3_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA);
         cipherMap.put("SSL3_DHE_RSA_WITH_DES_CBC_SHA",
                 SSLSocket.SSL3_DHE_RSA_WITH_DES_CBC_SHA);
+
         cipherMap.put("SSL3_DHE_RSA_WITH_3DES_EDE_CBC_SHA",
+                SSLSocket.SSL3_DHE_RSA_WITH_3DES_EDE_CBC_SHA);
+        // deprecated SSL3.0 names replaced by IANA-registered TLS names
+        cipherMap.put("TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA",
                 SSLSocket.SSL3_DHE_RSA_WITH_3DES_EDE_CBC_SHA);
 
         cipherMap.put("SSL3_DH_ANON_EXPORT_WITH_RC4_40_MD5",
@@ -257,13 +271,21 @@ public class JSSSocketFactory implements
                 SSLSocket.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256);
         cipherMap.put("TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
                 SSLSocket.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256);
-        cipherMap.put("TLS_ECDH_ECDSA_WITH_AES_128_GCM_SHA256",
-                SSLSocket.TLS_ECDH_ECDSA_WITH_AES_128_GCM_SHA256);
         cipherMap.put("TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
                 SSLSocket.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256);
+/* unsupported by nss
+        cipherMap.put("TLS_ECDH_ECDSA_WITH_AES_128_GCM_SHA256",
+                SSLSocket.TLS_ECDH_ECDSA_WITH_AES_128_GCM_SHA256);
         cipherMap.put("TLS_ECDH_RSA_WITH_AES_128_GCM_SHA256",
                 SSLSocket.TLS_ECDH_RSA_WITH_AES_128_GCM_SHA256);
+*/
 
+        cipherMap.put("TLS_ECDH_RSA_WITH_AES_256_CBC_SHA",
+                SSLSocket.TLS_ECDH_RSA_WITH_AES_256_CBC_SHA);
+        cipherMap.put("TLS_ECDH_RSA_WITH_AES_128_CBC_SHA",
+                SSLSocket.TLS_ECDH_RSA_WITH_AES_128_CBC_SHA);
+        cipherMap.put("TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA",
+                SSLSocket.TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA);
     }
 
     private static HashMap<Integer, String> eccCipherMap = new HashMap<Integer, String>();
@@ -308,9 +330,14 @@ public class JSSSocketFactory implements
                 "TLS_ECDH_RSA_WITH_NULL_SHA");
         eccCipherMap.put(SSLSocket.TLS_ECDH_ECDSA_WITH_NULL_SHA,
                 "TLS_ECDH_ECDSA_WITH_NULL_SHA");
+/* unsupported by nss
+        eccCipherMap.put(SSLSocket.TLS_ECDH_ECDSA_WITH_AES_128_GCM_SHA256,
+                "TLS_ECDH_ECDSA_WITH_AES_128_GCM_SHA256");
+*/
     }
 
     private AbstractEndpoint endpoint;
+    private Properties config;
 
     static org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
             .getLog(JSSSocketFactory.class);
@@ -334,6 +361,11 @@ public class JSSSocketFactory implements
 
     public JSSSocketFactory(AbstractEndpoint endpoint) {
         this.endpoint = endpoint;
+    }
+
+    public JSSSocketFactory(AbstractEndpoint endpoint, Properties config) {
+        this.endpoint = endpoint;
+        this.config = config;
     }
 
     private void debugWrite(String m) throws IOException {
@@ -393,6 +425,7 @@ public class JSSSocketFactory implements
                             + ": 0x" + Integer.toHexString(cipherid) + "\n");
                     SSLSocket.setCipherPreferenceDefault(cipherid, state);
                 } catch (Exception e) {
+                    System.err.println("SSLSocket.setCipherPreferenceDefault exception:" +e);
                     if (eccCipherMap.containsKey(cipherid)) {
                         System.err
                                 .println("Warning: SSL ECC cipher \""
@@ -530,12 +563,16 @@ public class JSSSocketFactory implements
     }
 
     String getEndpointAttribute(String tag) {
-        try {
-            return (String) endpoint.getAttribute(tag);
-        } catch (Exception e) {
-            // old tomcat throws an exception if the parameter does not exist
+
+        // check <catalina.base>/conf/server.xml
+        String value = (String)endpoint.getAttribute(tag);
+
+        // if not available, check <catalina.base>/conf/tomcatjss.conf
+        if (value == null) {
+            value = config.getProperty(tag);
         }
-        return null;
+
+        return value;
     }
 
     String getEndpointAttribute(String tag, String defaultValue) {

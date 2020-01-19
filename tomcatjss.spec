@@ -1,7 +1,7 @@
 Name:     tomcatjss
-Version:  7.1.2
-Release:  3%{?dist}
-Summary:  JSSE implementation using JSS for Tomcat
+Version:  7.2.1
+Release:  7%{?dist}
+Summary:  JSS Connector for Apache Tomcat, a JSSE module for Apache Tomcat that uses JSS
 URL:      http://pki.fedoraproject.org/
 License:  LGPLv2+
 Group:    System Environment/Libraries
@@ -14,11 +14,16 @@ Source0:  http://pki.fedoraproject.org/pki/sources/%{name}/%{name}-%{version}.ta
 # jpackage-utils requires versioning to meet both build and runtime requirements
 # jss requires versioning to meet both build and runtime requirements
 # tomcat requires versioning to meet both build and runtime requirements
+Conflicts:        pki-base < 10.4.0
 BuildRequires:    ant
 BuildRequires:    apache-commons-lang
 BuildRequires:    java-devel
 BuildRequires:    jpackage-utils >= 0:1.7.5-15
-BuildRequires:    jss >= 4.2.6-35
+%if 0%{?fedora}
+BuildRequires:    jss >= 4.4.4-3
+%else
+BuildRequires:    jss >= 4.4.0-13
+%endif
 %if 0%{?fedora} >= 23
 BuildRequires:    tomcat >= 8.0.18
 %else
@@ -32,16 +37,33 @@ Requires:         java-headless
 Requires:         java
 %endif
 Requires:         jpackage-utils >= 0:1.7.5-15
-Requires:         jss >= 4.2.6-35
+%if 0%{?fedora}
+Requires:         jss >= 4.4.4-3
+%else
+Requires:         jss >= 4.4.0-13
+%endif
 %if 0%{?fedora} >= 23
 Requires:         tomcat >= 8.0.18
 %else
 Requires:         tomcat >= 7.0.68
 %endif
 
-## tomcatjss-7.1.2-2
-Patch1:           tomcatjss-Build-Tomcat-7.0.68.patch
-Patch2:           tomcatjss-missing-ciphers.patch
+#######################
+## tomcatjss-7.2.1-3
+#######################
+Patch1:           tomcatjss-support-for-event-API.patch
+#######################
+## tomcatjss-7.2.1-4
+#######################
+Patch2:           tomcatjss-Fixed-SSL-cipher-list-parser.patch
+#######################
+## tomcatjss-7.2.1-5
+#######################
+Patch3:           tomcatjss-Comply-with-ASF-trademark-rules.patch
+#######################
+## tomcatjss-7.2.1-7
+#######################
+Patch4:           tomcatjss-add-TLS-SHA384-ciphers.patch
 
 # The 'tomcatjss' package conflicts with the 'tomcat-native' package
 # because it uses an underlying NSS security model rather than the
@@ -55,8 +77,10 @@ Conflicts:        tomcat-native
 %endif
 
 %description
-A Java Secure Socket Extension (JSSE) implementation
-using Java Security Services (JSS) for Tomcat 7.
+JSS Connector for Apache Tomcat, installed via the tomcatjss package,
+is a Java Secure Socket Extension (JSSE) module for Apache Tomcat that
+uses Java Security Services (JSS), a Java interface to Network Security
+Services (NSS).
 
 NOTE:  The 'tomcatjss' package conflicts with the 'tomcat-native' package
        because it uses an underlying NSS security model rather than the
@@ -65,8 +89,10 @@ NOTE:  The 'tomcatjss' package conflicts with the 'tomcat-native' package
 %prep
 
 %setup -q
-%patch1 -p0
-%patch2 -p0
+%patch1 -p1
+%patch2 -p1
+%patch3 -p1
+%patch4 -p1
 chmod -c -x LICENSE README
 
 %build
@@ -97,22 +123,57 @@ rm -rf %{buildroot}
 %{_javadir}/*
 
 %changelog
+* Mon Jul  2 2018 Matthew Harmsen <mharmsen@redhat.com> 7.2.1-7
+- Updated jss build and runtime dependencies
+- Bugzilla Bug #1597180 - Tomcatjss: Add support for TLS_*_SHA384 ciphers
+  [rhel-7.5.z] (cfu)
+
+* Mon Jun 12 2017 Matthew Harmsen <mharmsen@redhat.com> 7.2.1-6
+- Bugzilla Bug #1460040 - Comply with ASF trademark rules (mharmsen)
+
+* Mon Jun 12 2017 Matthew Harmsen <mharmsen@redhat.com> 7.2.1-5
+- Bugzilla Bug #1460037 - Comply with ASF trademark rules (mharmsen)
+
+* Mon Jun  5 2017 Endi Sukma Dewata <edewata@redhat.com> 7.2.1-4
+- Bugzilla Bug #1457524 - Problem parsing formatted cipher list (edewata)
+
+* Mon Mar 27 2017 Matthew Harmsen <mharmsen@redhat.com> - 7.2.1-3
+- Bugzilla Bug #1394416 - Rebase tomcatjss to 7.2.x in RHEL 7.4 (mharmsen)
+- ## 'tomcatjss-support-for-event-API.patch' resolves the following issues
+  ## ported from upstream:
+- tomcatjss Pagure Issue #4 - Support for Event API (edewata)
+
+* Tue Mar 21 2017 Matthew Harmsen <mharmsen@redhat.com> - 7.2.1-2
+- Added Conflicts statement due to incompatibility with pki-base < 10.4.0
+
+* Tue Mar 14 2017 Matthew Harmsen <mharmsen@redhat.com> 7.2.1-1
+- Updated jss build and runtime dependencies
+- Bumped version due to corrupted tarball
+
+* Mon Mar 13 2017 Matthew Harmsen <mharmsen@redhat.com> 7.2.0-2
+- Changed build so that it did not package and depend upon the specfile being
+  included inside the tarball
+
+* Sun Mar 12 2017 Matthew Harmsen <mharmsen@redhat.com> 7.2.0-1
+- tomcatjss Pagure Issue #6 - Rebase tomcatjss to 7.2.0 in Fedora 25+ (mharmsen)
+- Bugzilla Bug #1394416 - Rebase tomcatjss to 7.2.0 in RHEL 7.4 (mharmsen)
+
 * Wed Jun 29 2016 Christina Fu <cfu@redhat.com> 7.1.2-3
 - Bugzilla Bug #1203407 - missing ciphers (cfu)
 
 * Wed Mar 16 2016 Endi Sukma Dewata <edewata@redhat.com> 7.1.2-2
 - Bugzilla Bug #1344804 - Build failure on RHEL 7.3
   (patch for Bugzilla Bug #1245786 - Build failure on F23 was backported to
-   RHEL 7 to coincide with Tomcat version change to 7.0.68+)
+   RHEL 7 to coincide with Apache Tomcat version change to 7.0.68+)
 
 * Wed Mar  4 2015 Endi Sukma Dewata <edewata@redhat.com> 7.1.2-1
-- Bugzilla Bug #1198450 - Support for Tomcat 8
+- Bugzilla Bug #1198450 - Support for Apache Tomcat 8
 - Bugzilla Bug #1214858 - Add nuxwdog support (alee)
 
 * Tue Sep 30 2014 Christina Fu <cfu@redhat.com> 7.1.1-1
 - Bugzilla Bug #1058366 NullPointerException in tomcatjss searching
   for attribute "clientauth" (cfu)
-- Bugzilla Bug #871171 - Provide Tomcat support for TLS v1.1 and
+- Bugzilla Bug #871171 - Provide Apache Tomcat support for TLS v1.1 and
   TLS v1.2 (cfu)
 - Bumped revision to 7.1.1
 
@@ -140,8 +201,8 @@ rm -rf %{buildroot}
 - Bugzila Bug #819554 tomcatjss: Please migrate from tomcat6 to tomcat7
 
 * Thu Aug  2 2012 Matthew Harmsen <mharmsen@redhat.com> 7.0.0-3
-- PKI TRAC Ticket #283 - Dogtag 10: Integrate Tomcat 6 'tomcatjss.jar' and
-  Tomcat 7 'tomcat7jss.jar' in Fedora 18 tomcatjss package
+- PKI TRAC Ticket #283 - Dogtag 10: Integrate Apache Tomcat 6 'tomcatjss.jar'
+  and Apache Tomcat 7 'tomcat7jss.jar' in Fedora 18 tomcatjss package
 
 * Thu Jul 26 2012 Matthew Harmsen <mharmsen@redhat.com> 7.0.0-2
 - Fixed runtime 'Requires' cut/paste typos
