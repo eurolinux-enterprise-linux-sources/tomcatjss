@@ -1,6 +1,7 @@
 Name:     tomcatjss
 Version:  7.2.1
-Release:  7%{?dist}
+#Release:  8%{?dist}
+Release:  8.el7_6
 Summary:  JSS Connector for Apache Tomcat, a JSSE module for Apache Tomcat that uses JSS
 URL:      http://pki.fedoraproject.org/
 License:  LGPLv2+
@@ -19,11 +20,7 @@ BuildRequires:    ant
 BuildRequires:    apache-commons-lang
 BuildRequires:    java-devel
 BuildRequires:    jpackage-utils >= 0:1.7.5-15
-%if 0%{?fedora}
 BuildRequires:    jss >= 4.4.4-3
-%else
-BuildRequires:    jss >= 4.4.0-13
-%endif
 %if 0%{?fedora} >= 23
 BuildRequires:    tomcat >= 8.0.18
 %else
@@ -37,11 +34,7 @@ Requires:         java-headless
 Requires:         java
 %endif
 Requires:         jpackage-utils >= 0:1.7.5-15
-%if 0%{?fedora}
 Requires:         jss >= 4.4.4-3
-%else
-Requires:         jss >= 4.4.0-13
-%endif
 %if 0%{?fedora} >= 23
 Requires:         tomcat >= 8.0.18
 %else
@@ -64,6 +57,10 @@ Patch3:           tomcatjss-Comply-with-ASF-trademark-rules.patch
 ## tomcatjss-7.2.1-7
 #######################
 Patch4:           tomcatjss-add-TLS-SHA384-ciphers.patch
+#######################
+## tomcatjss-7.2.1-8
+#######################
+Patch5:           tomcatjss-enable-OCSP-from-peer-AIA-extension.patch
 
 # The 'tomcatjss' package conflicts with the 'tomcat-native' package
 # because it uses an underlying NSS security model rather than the
@@ -93,6 +90,7 @@ NOTE:  The 'tomcatjss' package conflicts with the 'tomcat-native' package
 %patch2 -p1
 %patch3 -p1
 %patch4 -p1
+%patch5 -p1
 chmod -c -x LICENSE README
 
 %build
@@ -123,10 +121,17 @@ rm -rf %{buildroot}
 %{_javadir}/*
 
 %changelog
+* Mon Oct 29 2018 Jack Magne <jmagne@redhat.com> 7.2.1-8
+- Bugzilla Bug #1632618 - CC: tomcatjss: unable to enable OCSP checking
+  from peer AIA extension [rhel-7.6.z] (jmagne)
+
+* Tue Sep 18 2018 Matthew Harmsen <mharmsen@redhat.com> 7.2.1-7.1
+- Bumped Release number to support upgrades.
+
 * Mon Jul  2 2018 Matthew Harmsen <mharmsen@redhat.com> 7.2.1-7
 - Updated jss build and runtime dependencies
-- Bugzilla Bug #1597180 - Tomcatjss: Add support for TLS_*_SHA384 ciphers
-  [rhel-7.5.z] (cfu)
+- Bugzilla Bug #1596769 - Tomcatjss: Add support for TLS_*_SHA384
+  ciphers (cfu)
 
 * Mon Jun 12 2017 Matthew Harmsen <mharmsen@redhat.com> 7.2.1-6
 - Bugzilla Bug #1460040 - Comply with ASF trademark rules (mharmsen)

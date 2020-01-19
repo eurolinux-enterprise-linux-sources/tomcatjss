@@ -1,0 +1,39 @@
+From c7e9138d59833ca0b9437fd130d3d9cb2fdf393d Mon Sep 17 00:00:00 2001
+From: John Magne <jmagne@mharmsen-rhel7.usersys.redhat.com>
+Date: Thu, 20 Sep 2018 21:35:20 -0400
+Subject: [PATCH] Fix for Bug 1630469 - CC: tomcatjss: unable to enable OCSP
+ checking from peer AIA extension.
+
+    Now the server.xml can be configured to enable ocsp AND leave other settings null, to trigger
+    NSS to use the AIA extension to locate the ocsp responder.
+
+    ex:
+
+     <Connector name="Secure" port="18443" ...
+         .....
+         enableOCSP="true"  ocspCacheSize="1000" ocspMinCacheEntryDuration="60" ocspMaxCacheEntryDuration="120" ocspTimeout="10"
+---
+ src/org/apache/tomcat/util/net/jss/JSSSocketFactory.java | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/src/org/apache/tomcat/util/net/jss/JSSSocketFactory.java b/src/org/apache/tomcat/util/net/jss/JSSSocketFactory.java
+index b38b091..b91c7a4 100644
+--- a/src/org/apache/tomcat/util/net/jss/JSSSocketFactory.java
++++ b/src/org/apache/tomcat/util/net/jss/JSSSocketFactory.java
+@@ -740,8 +740,11 @@ public class JSSSocketFactory implements
+                             "ocspResponderCertNickname");
+                     debugWrite("JSSSocketFactory init - ocspResponderCertNickname"
+                             + ocspResponderCertNickname + "\n");
+-                    if (StringUtils.isNotEmpty(ocspResponderURL) &&
+-                            StringUtils.isNotEmpty(ocspResponderCertNickname)) {
++
++                    if ((StringUtils.isNotEmpty(ocspResponderURL) &&
++                         	StringUtils.isNotEmpty(ocspResponderCertNickname))  ||
++                        	(StringUtils.isEmpty(ocspResponderURL)
++                            	&& StringUtils.isEmpty(ocspResponderCertNickname))) {
+ 
+                         ocspConfigured = true;
+                         try {
+-- 
+1.8.3.1
+
