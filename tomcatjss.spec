@@ -1,6 +1,6 @@
 Name:     tomcatjss
 Version:  7.2.1
-Release:  6%{?dist}
+Release:  7.1%{?dist}
 Summary:  JSS Connector for Apache Tomcat, a JSSE module for Apache Tomcat that uses JSS
 URL:      http://pki.fedoraproject.org/
 License:  LGPLv2+
@@ -19,11 +19,7 @@ BuildRequires:    ant
 BuildRequires:    apache-commons-lang
 BuildRequires:    java-devel
 BuildRequires:    jpackage-utils >= 0:1.7.5-15
-%if 0%{?fedora}
-BuildRequires:    jss >= 4.4.2-2
-%else
-BuildRequires:    jss >= 4.4.0-7
-%endif
+BuildRequires:    jss >= 4.4.4-3
 %if 0%{?fedora} >= 23
 BuildRequires:    tomcat >= 8.0.18
 %else
@@ -37,11 +33,7 @@ Requires:         java-headless
 Requires:         java
 %endif
 Requires:         jpackage-utils >= 0:1.7.5-15
-%if 0%{?fedora}
-Requires:         jss >= 4.4.2-2
-%else
-Requires:         jss >= 4.4.0-7
-%endif
+Requires:         jss >= 4.4.4-3
 %if 0%{?fedora} >= 23
 Requires:         tomcat >= 8.0.18
 %else
@@ -60,6 +52,10 @@ Patch2:           tomcatjss-Fixed-SSL-cipher-list-parser.patch
 ## tomcatjss-7.2.1-5
 #######################
 Patch3:           tomcatjss-Comply-with-ASF-trademark-rules.patch
+#######################
+## tomcatjss-7.2.1-7
+#######################
+Patch4:           tomcatjss-add-TLS-SHA384-ciphers.patch
 
 # The 'tomcatjss' package conflicts with the 'tomcat-native' package
 # because it uses an underlying NSS security model rather than the
@@ -88,6 +84,7 @@ NOTE:  The 'tomcatjss' package conflicts with the 'tomcat-native' package
 %patch1 -p1
 %patch2 -p1
 %patch3 -p1
+%patch4 -p1
 chmod -c -x LICENSE README
 
 %build
@@ -118,6 +115,14 @@ rm -rf %{buildroot}
 %{_javadir}/*
 
 %changelog
+* Tue Sep 18 2018 Matthew Harmsen <mharmsen@redhat.com> 7.2.1-7.1
+- Bumped Release number to support upgrades.
+
+* Mon Jul  2 2018 Matthew Harmsen <mharmsen@redhat.com> 7.2.1-7
+- Updated jss build and runtime dependencies
+- Bugzilla Bug #1596769 - Tomcatjss: Add support for TLS_*_SHA384
+  ciphers (cfu)
+
 * Mon Jun 12 2017 Matthew Harmsen <mharmsen@redhat.com> 7.2.1-6
 - Bugzilla Bug #1460040 - Comply with ASF trademark rules (mharmsen)
 
